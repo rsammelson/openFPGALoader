@@ -1310,21 +1310,14 @@ int Lattice::spi_put(uint8_t *tx, uint8_t *rx, uint32_t len)
 int Lattice::spi_wait(uint8_t cmd, uint8_t mask, uint8_t cond,
 		uint32_t timeout, bool verbose)
 {
-	uint8_t rx;
-	uint8_t dummy[2];
+	uint8_t rx[2];
 	uint8_t tmp;
-	uint8_t tx = LatticeBitParser::reverseByte(cmd);
+	uint8_t tx[2] = {LatticeBitParser::reverseByte(cmd), 0};
 	uint32_t count = 0;
 
-	/* CS is low until state goes to EXIT1_IR
-	 * so manually move to state machine to stay is this
-	 * state as long as needed
-	 */
-	_jtag->shiftDR(&tx, NULL, 8, Jtag::SHIFT_DR);
-
 	do {
-		_jtag->shiftDR(dummy, &rx, 8, Jtag::SHIFT_DR);
-		tmp = (LatticeBitParser::reverseByte(rx));
+        _jtag->shiftDR(tx, rx, 16);
+		tmp = (LatticeBitParser::reverseByte(rx[1]));
 		count++;
 		if (count == timeout){
 			printf("timeout: %x %x %u\n", tmp, rx, count);
@@ -1335,7 +1328,7 @@ int Lattice::spi_wait(uint8_t cmd, uint8_t mask, uint8_t cond,
 			printf("%x %x %x %u\n", tmp, mask, cond, count);
 		}
 	} while ((tmp & mask) != cond);
-	_jtag->shiftDR(dummy, &rx, 8, Jtag::RUN_TEST_IDLE);
+
 	if (count == timeout) {
 		printf("%x\n", tmp);
 		std::cout << "wait: Error" << std::endl;
