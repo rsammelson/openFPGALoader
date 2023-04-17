@@ -21,6 +21,7 @@
 
 #define VID 0x1366
 #define PID 0x0105
+#define PID2 0x0101
 
 using namespace std;
 
@@ -677,7 +678,7 @@ bool Jlink::jlink_scan_usb()
 			return EXIT_FAILURE;
 		}
 
-		if (desc.idProduct != PID || desc.idVendor != VID)
+		if ((desc.idProduct != PID && desc.idProduct != PID2) || desc.idVendor != VID)
 			continue;
 
 		if (_verbose)
